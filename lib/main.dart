@@ -146,7 +146,8 @@ class _ContactIndexDemoPageState extends State<ContactIndexDemoPage> {
   }) {
     final bool hasSection = _sectionMap.containsKey(letter);
     final String? nextDragLetter = fromDrag ? letter : null;
-    if (_dragLetter != nextDragLetter || (hasSection && _currentLetter != letter)) {
+    if (_dragLetter != nextDragLetter ||
+        (hasSection && _currentLetter != letter)) {
       setState(() {
         _dragLetter = nextDragLetter;
         if (hasSection) {
@@ -194,15 +195,15 @@ class _ContactIndexDemoPageState extends State<ContactIndexDemoPage> {
       );
       slivers.add(
         SliverList(
-          delegate: SliverChildBuilderDelegate(
-            (BuildContext context, int index) {
-              return ContactTile(
-                contact: section.contacts[index],
-                extent: _contactTileExtent,
-              );
-            },
-            childCount: section.contacts.length,
-          ),
+          delegate: SliverChildBuilderDelegate((
+            BuildContext context,
+            int index,
+          ) {
+            return ContactTile(
+              contact: section.contacts[index],
+              extent: _contactTileExtent,
+            );
+          }, childCount: section.contacts.length),
         ),
       );
     }
@@ -215,6 +216,7 @@ class _ContactIndexDemoPageState extends State<ContactIndexDemoPage> {
     required String label,
     required String value,
     required Color color,
+    bool compact = false,
   }) {
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -222,27 +224,149 @@ class _ContactIndexDemoPageState extends State<ContactIndexDemoPage> {
         borderRadius: BorderRadius.circular(999),
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        padding: EdgeInsets.symmetric(
+          horizontal: compact ? 10 : 12,
+          vertical: compact ? 8 : 10,
+        ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
             Container(
-              width: 8,
-              height: 8,
+              width: compact ? 7 : 8,
+              height: compact ? 7 : 8,
               decoration: BoxDecoration(
                 color: color,
                 borderRadius: BorderRadius.circular(999),
               ),
             ),
-            const SizedBox(width: 8),
+            SizedBox(width: compact ? 6 : 8),
             Text(
               '$label$value',
               style: TextStyle(
                 color: const Color(0xFF1F2937),
+                fontSize: compact ? 12 : 13,
                 fontWeight: FontWeight.w600,
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOverviewPanel({
+    required int totalContacts,
+    required String selectedLetter,
+    required bool compact,
+    required bool ultraCompact,
+  }) {
+    final EdgeInsetsGeometry outerPadding = EdgeInsets.fromLTRB(
+      12,
+      compact ? 6 : 8,
+      12,
+      compact ? 8 : 12,
+    );
+    final EdgeInsetsGeometry innerPadding = EdgeInsets.fromLTRB(
+      compact ? 16 : 18,
+      compact ? 14 : 18,
+      compact ? 16 : 18,
+      compact ? 14 : 18,
+    );
+
+    return Padding(
+      padding: outerPadding,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(compact ? 24 : 28),
+          boxShadow: const <BoxShadow>[
+            BoxShadow(
+              color: Color(0x120F172A),
+              blurRadius: 24,
+              offset: Offset(0, 12),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: innerPadding,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Row(
+                children: <Widget>[
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: <Color>[Color(0xFF39C25A), Color(0xFF1AAD19)],
+                      ),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: SizedBox(width: 5, height: ultraCompact ? 28 : 36),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        Text(
+                          ultraCompact ? '联系人索引演示' : '毫秒级定位目标联系人',
+                          style: TextStyle(
+                            fontSize: compact ? 16 : 18,
+                            height: 1.25,
+                            fontWeight: FontWeight.w800,
+                            color: const Color(0xFF0F172A),
+                          ),
+                        ),
+                        if (!ultraCompact) ...<Widget>[
+                          const SizedBox(height: 4),
+                          Text(
+                            compact
+                                ? '点击或拖动右侧字母，列表会立刻跳到对应分组。'
+                                : '点击或拖动右侧字母，列表会立刻跳到对应分组，滚动时索引也会同步高亮。',
+                            style: const TextStyle(
+                              fontSize: 13,
+                              height: 1.5,
+                              color: Color(0xFF475569),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: ultraCompact ? 10 : 14),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: <Widget>[
+                  _buildSummaryChip(
+                    label: compact ? '分组 ' : '当前分组 ',
+                    value: selectedLetter,
+                    color: const Color(0xFF1AAD19),
+                    compact: compact,
+                  ),
+                  _buildSummaryChip(
+                    label: compact ? '联系人 ' : '联系人 ',
+                    value: '$totalContacts 位',
+                    color: const Color(0xFF0EA5E9),
+                    compact: compact,
+                  ),
+                  _buildSummaryChip(
+                    label: compact ? '模式 ' : '模式 ',
+                    value: compact ? '缺字母置灰' : '缺失字母自动置灰',
+                    color: const Color(0xFFF59E0B),
+                    compact: compact,
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -257,10 +381,7 @@ class _ContactIndexDemoPageState extends State<ContactIndexDemoPage> {
       math.max(availableHeight - 12, 0),
     );
     final double letterExtent = barHeight / _indexLetters.length;
-    final double letterFontSize = math.max(
-      8,
-      math.min(10, letterExtent - 2),
-    );
+    final double letterFontSize = math.max(8, math.min(10, letterExtent - 2));
     final double activeBubbleHeight = math.max(12, letterExtent - 2);
 
     return SizedBox(
@@ -376,37 +497,46 @@ class _ContactIndexDemoPageState extends State<ContactIndexDemoPage> {
       (int count, ContactSection section) => count + section.contacts.length,
     );
     final String selectedLetter = _dragLetter ?? _currentLetter;
+    final double screenHeight = MediaQuery.sizeOf(context).height;
+    final bool compactScreen = screenHeight < 780;
+    final bool ultraCompactScreen = screenHeight < 700;
 
     return Scaffold(
       appBar: AppBar(
-        toolbarHeight: 78,
-        titleSpacing: 20,
-        title: const Column(
+        toolbarHeight: ultraCompactScreen ? 64 : 72,
+        titleSpacing: compactScreen ? 16 : 20,
+        title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            Text('微信式索引通讯录'),
-            SizedBox(height: 4),
-            Text(
-              'A-Z 点击跳转、滚动高亮、拖动联动',
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                color: Color(0xFF64748B),
+            const Text('微信式索引通讯录'),
+            if (!ultraCompactScreen) ...<Widget>[
+              const SizedBox(height: 4),
+              const Text(
+                'A-Z 点击跳转、滚动高亮、拖动联动',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: Color(0xFF64748B),
+                ),
               ),
-            ),
+            ],
           ],
         ),
         actions: <Widget>[
           Padding(
-            padding: const EdgeInsets.only(right: 20),
+            padding: EdgeInsets.only(right: compactScreen ? 16 : 20),
             child: DecoratedBox(
               decoration: BoxDecoration(
                 color: const Color(0xFFE8F6E9),
                 borderRadius: BorderRadius.circular(999),
               ),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: EdgeInsets.symmetric(
+                  horizontal: compactScreen ? 14 : 16,
+                  vertical: compactScreen ? 7 : 8,
+                ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
@@ -421,9 +551,9 @@ class _ContactIndexDemoPageState extends State<ContactIndexDemoPage> {
                     Text(
                       selectedLetter,
                       key: const ValueKey<String>('current-letter-badge'),
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: Color(0xFF1AAD19),
-                        fontSize: 18,
+                        fontSize: compactScreen ? 17 : 18,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
@@ -444,121 +574,82 @@ class _ContactIndexDemoPageState extends State<ContactIndexDemoPage> {
         ),
         child: SafeArea(
           top: false,
-          child: Column(
-            children: <Widget>[
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 14),
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(28),
-                    boxShadow: const <BoxShadow>[
-                      BoxShadow(
-                        color: Color(0x120F172A),
-                        blurRadius: 28,
-                        offset: Offset(0, 14),
-                      ),
-                    ],
+          child: LayoutBuilder(
+            builder: (BuildContext context, BoxConstraints constraints) {
+              final bool compactLayout = constraints.maxHeight < 720;
+              final bool ultraCompactLayout = constraints.maxHeight < 620;
+
+              return Column(
+                children: <Widget>[
+                  _buildOverviewPanel(
+                    totalContacts: totalContacts,
+                    selectedLetter: selectedLetter,
+                    compact: compactLayout,
+                    ultraCompact: ultraCompactLayout,
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        const Text(
-                          '像微信一样，在成百上千联系人里毫秒级定位到目标分组。',
-                          style: TextStyle(
-                            fontSize: 18,
-                            height: 1.45,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF0F172A),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        const Text(
-                          '这个 demo 使用 CustomScrollView + SliverPersistentHeader 构建分组列表，右侧索引条同时支持点击和拖动，滚动时还会自动同步高亮。',
-                          style: TextStyle(
-                            fontSize: 14,
-                            height: 1.7,
-                            color: Color(0xFF475569),
-                          ),
-                        ),
-                        const SizedBox(height: 18),
-                        Wrap(
-                          spacing: 10,
-                          runSpacing: 10,
-                          children: <Widget>[
-                            _buildSummaryChip(
-                              label: '当前分组 ',
-                              value: selectedLetter,
-                              color: const Color(0xFF1AAD19),
-                            ),
-                            _buildSummaryChip(
-                              label: '联系人 ',
-                              value: '$totalContacts 位',
-                              color: const Color(0xFF0EA5E9),
-                            ),
-                            _buildSummaryChip(
-                              label: '模式 ',
-                              value: '缺失字母自动置灰',
-                              color: const Color(0xFFF59E0B),
+                  Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        12,
+                        0,
+                        12,
+                        compactLayout ? 10 : 12,
+                      ),
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(30),
+                          boxShadow: const <BoxShadow>[
+                            BoxShadow(
+                              color: Color(0x100F172A),
+                              blurRadius: 26,
+                              offset: Offset(0, 10),
                             ),
                           ],
                         ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(30),
-                      boxShadow: const <BoxShadow>[
-                        BoxShadow(
-                          color: Color(0x100F172A),
-                          blurRadius: 26,
-                          offset: Offset(0, 10),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(30),
+                          child: Stack(
+                            children: <Widget>[
+                              CustomScrollView(
+                                key: const ValueKey<String>(
+                                  'contact-scroll-view',
+                                ),
+                                controller: _scrollController,
+                                physics: const BouncingScrollPhysics(
+                                  parent: AlwaysScrollableScrollPhysics(),
+                                ),
+                                slivers: _buildSlivers(),
+                              ),
+                              Positioned(
+                                right: 6,
+                                top: 0,
+                                bottom: 0,
+                                child: LayoutBuilder(
+                                  builder:
+                                      (
+                                        BuildContext context,
+                                        BoxConstraints constraints,
+                                      ) {
+                                        return Center(
+                                          child: _buildIndexBar(
+                                            constraints.maxHeight,
+                                          ),
+                                        );
+                                      },
+                                ),
+                              ),
+                              if (_dragLetter != null)
+                                Center(child: _buildDragOverlay(_dragLetter!)),
+                            ],
+                          ),
                         ),
-                      ],
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(30),
-                      child: Stack(
-                        children: <Widget>[
-                          CustomScrollView(
-                            key: const ValueKey<String>('contact-scroll-view'),
-                            controller: _scrollController,
-                            physics: const BouncingScrollPhysics(
-                              parent: AlwaysScrollableScrollPhysics(),
-                            ),
-                            slivers: _buildSlivers(),
-                          ),
-                          Positioned(
-                            right: 6,
-                            top: 0,
-                            bottom: 0,
-                            child: LayoutBuilder(
-                              builder: (BuildContext context, BoxConstraints constraints) {
-                                return Center(
-                                  child: _buildIndexBar(constraints.maxHeight),
-                                );
-                              },
-                            ),
-                          ),
-                          if (_dragLetter != null) Center(
-                            child: _buildDragOverlay(_dragLetter!),
-                          ),
-                        ],
                       ),
                     ),
                   ),
-                ),
-              ),
-            ],
+                ],
+              );
+            },
           ),
         ),
       ),
@@ -584,7 +675,9 @@ class SectionHeaderDelegate extends SliverPersistentHeaderDelegate {
     bool overlapsContent,
   ) {
     return Container(
-      color: overlapsContent ? const Color(0xFFF5FAF6) : const Color(0xFFF8FBF8),
+      color: overlapsContent
+          ? const Color(0xFFF5FAF6)
+          : const Color(0xFFF8FBF8),
       padding: const EdgeInsets.symmetric(horizontal: 20),
       alignment: Alignment.centerLeft,
       child: Row(
@@ -639,9 +732,7 @@ class ContactTile extends StatelessWidget {
       height: extent,
       child: DecoratedBox(
         decoration: const BoxDecoration(
-          border: Border(
-            bottom: BorderSide(color: Color(0xFFF0F4F2)),
-          ),
+          border: Border(bottom: BorderSide(color: Color(0xFFF0F4F2))),
         ),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -796,7 +887,12 @@ List<Contact> buildSampleContacts() {
     Contact(name: '张弛', pinyin: 'zhangchi', phone: '138 1001 1240', tag: '后端'),
     Contact(name: '周牧', pinyin: 'zhoumu', phone: '138 1001 1241', tag: '商务'),
     Contact(name: '赵溪', pinyin: 'zhaoxi', phone: '138 1001 1242', tag: '行政'),
-    Contact(name: '2号客服', pinyin: '2haokefu', phone: '138 1001 1243', tag: '特殊'),
+    Contact(
+      name: '2号客服',
+      pinyin: '2haokefu',
+      phone: '138 1001 1243',
+      tag: '特殊',
+    ),
     Contact(name: '·小满', pinyin: '·xiaoman', phone: '138 1001 1244', tag: '特殊'),
   ];
 }
