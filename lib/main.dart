@@ -184,12 +184,10 @@ class _ContactIndexDemoPageState extends State<ContactIndexDemoPage> {
 
     for (final ContactSection section in _sections) {
       slivers.add(
-        SliverPersistentHeader(
-          pinned: true,
-          delegate: SectionHeaderDelegate(
+        SliverToBoxAdapter(
+          child: _buildSectionHeader(
             letter: section.letter,
             count: section.contacts.length,
-            height: _sectionHeaderExtent,
           ),
         ),
       );
@@ -210,6 +208,77 @@ class _ContactIndexDemoPageState extends State<ContactIndexDemoPage> {
 
     slivers.add(const SliverToBoxAdapter(child: SizedBox(height: 20)));
     return slivers;
+  }
+
+  Widget _buildSectionHeader({
+    required String letter,
+    required int count,
+    bool floating = false,
+  }) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: floating ? const Color(0xFFF5FAF6) : const Color(0xFFF8FBF8),
+        boxShadow: floating
+            ? const <BoxShadow>[
+                BoxShadow(
+                  color: Color(0x120F172A),
+                  blurRadius: 14,
+                  offset: Offset(0, 6),
+                ),
+              ]
+            : null,
+      ),
+      child: SizedBox(
+        height: _sectionHeaderExtent,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            children: <Widget>[
+              Text(
+                letter,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF111827),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                '$count 位联系人',
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Color(0xFF64748B),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFloatingSectionHeader() {
+    final ContactSection? section = _sectionMap[_currentLetter];
+    if (section == null) {
+      return const SizedBox.shrink();
+    }
+
+    return IgnorePointer(
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 160),
+        switchInCurve: Curves.easeOutCubic,
+        switchOutCurve: Curves.easeInCubic,
+        child: SizedBox(
+          key: ValueKey<String>('floating-header-${section.letter}'),
+          child: _buildSectionHeader(
+            letter: section.letter,
+            count: section.contacts.length,
+            floating: true,
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildSummaryChip({
@@ -622,6 +691,12 @@ class _ContactIndexDemoPageState extends State<ContactIndexDemoPage> {
                                 slivers: _buildSlivers(),
                               ),
                               Positioned(
+                                top: 0,
+                                left: 0,
+                                right: 42,
+                                child: _buildFloatingSectionHeader(),
+                              ),
+                              Positioned(
                                 right: 6,
                                 top: 0,
                                 bottom: 0,
@@ -654,67 +729,6 @@ class _ContactIndexDemoPageState extends State<ContactIndexDemoPage> {
         ),
       ),
     );
-  }
-}
-
-class SectionHeaderDelegate extends SliverPersistentHeaderDelegate {
-  const SectionHeaderDelegate({
-    required this.letter,
-    required this.count,
-    required this.height,
-  });
-
-  final String letter;
-  final int count;
-  final double height;
-
-  @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
-    return Container(
-      color: overlapsContent
-          ? const Color(0xFFF5FAF6)
-          : const Color(0xFFF8FBF8),
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      alignment: Alignment.centerLeft,
-      child: Row(
-        children: <Widget>[
-          Text(
-            letter,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w800,
-              color: Color(0xFF111827),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Text(
-            '$count 位联系人',
-            style: const TextStyle(
-              fontSize: 12,
-              color: Color(0xFF64748B),
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  @override
-  double get maxExtent => height;
-
-  @override
-  double get minExtent => height;
-
-  @override
-  bool shouldRebuild(covariant SectionHeaderDelegate oldDelegate) {
-    return letter != oldDelegate.letter ||
-        count != oldDelegate.count ||
-        height != oldDelegate.height;
   }
 }
 
